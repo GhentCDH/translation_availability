@@ -1,0 +1,28 @@
+{#
+/**
+ * @file
+ * A notice that another language is substantially better.
+ *
+ * Available variables:
+ * - state: the state of the translation in the visitor's language (missing,
+ *   unpublished, empty, short, …).
+ * - language_name: the visitor's language.
+ * - current_words: the number of words of that translation.
+ * - alternatives: the better translations, keyed by langcode, each with
+ *   language_name, title, url and words.
+ */
+#}
+<aside class="translation-availability-notice" role="note">
+  <p>
+    {% if state == 'missing' %}
+      {{ 'This content is not available in @language yet.'|t({'@language': language_name}) }}
+    {% else %}
+      {{ 'A more complete version of this content is available in another language.'|t }}
+    {% endif %}
+  </p>
+  <ul>
+    {% for langcode, alternative in alternatives %}
+      <li><a href="{{ alternative.url }}" hreflang="{{ langcode }}" lang="{{ langcode }}">{{ alternative.title }}</a> ({{ alternative.language_name }})</li>
+    {% endfor %}
+  </ul>
+</aside>

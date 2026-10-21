@@ -1,0 +1,6 @@
+thresholds:
+  empty: 10
+  short: 200
+  full: 1000
+  ratio: 10
+mark_language_switcher: true

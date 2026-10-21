@@ -1,0 +1,26 @@
+services:
+  plugin.manager.translation_availability.text_extractor:
+    class: Drupal\translation_availability\TextExtractorManager
+    parent: default_plugin_manager
+  translation_availability.settings:
+    class: Drupal\translation_availability\AvailabilitySettings
+    arguments: ['@config.factory', '@entity_type.manager']
+  translation_availability.counter:
+    class: Drupal\translation_availability\WordCounter
+    arguments: ['@plugin.manager.translation_availability.text_extractor', '@entity_field.manager']
+  translation_availability.storage:
+    class: Drupal\translation_availability\AvailabilityStorage
+    arguments: ['@database']
+  translation_availability.analyzer:
+    class: Drupal\translation_availability\AvailabilityAnalyzer
+    arguments: ['@translation_availability.settings', '@translation_availability.counter', '@translation_availability.storage', '@language_manager', '@entity_type.manager']
+  translation_availability.unavailable_subscriber:
+    class: Drupal\translation_availability\EventSubscriber\UnavailableSubscriber
+    arguments: ['@translation_availability.analyzer', '@language_manager', '@current_user']
+    tags:
+      - { name: event_subscriber }
+  translation_availability.twig_extension:
+    class: Drupal\translation_availability\TwigExtension\AvailabilityTwigExtension
+    arguments: ['@translation_availability.analyzer']
+    tags:
+      - { name: twig.extension }

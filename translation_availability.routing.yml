@@ -1,0 +1,20 @@
+translation_availability.settings:
+  path: '/admin/config/regional/translation-availability'
+  defaults:
+    _form: '\Drupal\translation_availability\Form\SettingsForm'
+    _title: 'Translation availability'
+  requirements:
+    _permission: 'administer translation availability'
+
+translation_availability.unavailable:
+  path: '/translation-unavailable/{node}'
+  defaults:
+    _controller: '\Drupal\translation_availability\Controller\UnavailableController::page'
+    _title_callback: '\Drupal\translation_availability\Controller\UnavailableController::title'
+  requirements:
+    _permission: 'access content'
+    node: \d+
+  options:
+    parameters:
+      node:
+        type: entity:node

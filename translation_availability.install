@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for Translation availability.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_schema().
+ */
+function translation_availability_schema(): array {
+  $schema['translation_availability'] = [
+    'description' => 'The availability of each translation (also missing ones) of the tracked content: one row per entity and site language.',
+    'fields' => [
+      'entity_type' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => TRUE, 'description' => 'Entity type, e.g. node.'],
+      'entity_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'description' => 'Entity ID.'],
+      'langcode' => ['type' => 'varchar_ascii', 'length' => 12, 'not null' => TRUE, 'description' => 'Language of the translation.'],
+      'bundle' => ['type' => 'varchar_ascii', 'length' => 128, 'not null' => TRUE, 'description' => 'Bundle of the entity.'],
+      'state' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE, 'description' => 'missing, unpublished, empty, short, partial or full.'],
+      'words' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0, 'description' => 'Number of words in the fields that count as content.'],
+      'updated' => ['type' => 'int', 'not null' => TRUE, 'default' => 0, 'description' => 'When the row was calculated.'],
+    ],
+    'primary key' => ['entity_type', 'entity_id', 'langcode'],
+    'indexes' => [
+      'bundle' => ['entity_type', 'bundle'],
+      'langcode_state' => ['langcode', 'state'],
+    ],
+  ];
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function translation_availability_install(bool $is_syncing): void {
+  if (!$is_syncing) {
+    \Drupal::messenger()->addStatus(t('Enable translation availability per content type (Structure > Content types > Edit), then run <code>drush translation-availability:refresh</code> to count the existing content.'));
+  }
+}

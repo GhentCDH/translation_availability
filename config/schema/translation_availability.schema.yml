@@ -1,0 +1,59 @@
+translation_availability.settings:
+  type: config_object
+  label: 'Translation availability settings'
+  mapping:
+    thresholds:
+      type: translation_availability.thresholds
+      label: 'Default thresholds'
+    mark_language_switcher:
+      type: boolean
+      label: 'Mark languages without a published translation in the language switcher'
+
+translation_availability.thresholds:
+  type: mapping
+  label: 'Thresholds'
+  mapping:
+    empty:
+      type: integer
+      label: 'Fewer words than this: (almost) empty'
+    short:
+      type: integer
+      label: 'Fewer words than this: short'
+    full:
+      type: integer
+      label: 'More words than this: full'
+    ratio:
+      type: integer
+      label: 'Another language is better when it has this many times more words'
+
+node.type.*.third_party.translation_availability:
+  type: translation_availability.bundle_settings
+
+translation_availability.bundle_settings:
+  type: mapping
+  label: 'Translation availability of a content type'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Track translation availability'
+    fields:
+      type: sequence
+      label: 'Fields that count as content (paths, e.g. field_content.field_text)'
+      sequence:
+        type: string
+        label: 'Field path'
+    override_thresholds:
+      type: boolean
+      label: 'Use own thresholds'
+    thresholds:
+      type: translation_availability.thresholds
+      label: 'Thresholds'
+    missing:
+      type: string
+      label: 'When the translation is missing: original, unavailable_page'
+    unpublished:
+      type: string
+      label: 'When the translation is unpublished: unavailable_page, access_denied'
+    notice:
+      type: boolean
+      label: 'Show a notice when another language is substantially better'

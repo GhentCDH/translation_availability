@@ -1,0 +1,5 @@
+translation_availability.settings:
+  title: 'Translation availability'
+  description: 'Thresholds and behaviour for missing, unpublished and short translations.'
+  route_name: translation_availability.settings
+  parent: language.admin_config_regional

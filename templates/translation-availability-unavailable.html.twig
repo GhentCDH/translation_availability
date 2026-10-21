@@ -1,0 +1,33 @@
+{#
+/**
+ * @file
+ * The "not available in this language" page.
+ *
+ * Available variables:
+ * - language_name: the language of the visitor.
+ * - links: the published translations, keyed by langcode, each with
+ *   language_name, title and url.
+ * - translate_url: for editors, the URL to add the translation.
+ */
+#}
+<div class="translation-availability-unavailable">
+  {% if links %}
+    {% if links|length == 1 %}
+      {% set link = links|first %}
+      <p>{{ 'This content is not available in @language, but you can read it in @other:'|t({'@language': language_name, '@other': link.language_name}) }}
+        <a href="{{ link.url }}" hreflang="{{ links|keys|first }}" lang="{{ links|keys|first }}">{{ link.title }}</a></p>
+    {% else %}
+      <p>{{ 'This content is not available in @language, but you can read it in these languages:'|t({'@language': language_name}) }}</p>
+      <ul>
+        {% for langcode, link in links %}
+          <li>{{ link.language_name }}: <a href="{{ link.url }}" hreflang="{{ langcode }}" lang="{{ langcode }}">{{ link.title }}</a></li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% else %}
+    <p>{{ 'This content is not available in @language.'|t({'@language': language_name}) }}</p>
+  {% endif %}
+  {% if translate_url %}
+    <p><a href="{{ translate_url }}">{{ 'Add the @language translation'|t({'@language': language_name}) }}</a></p>
+  {% endif %}
+</div>

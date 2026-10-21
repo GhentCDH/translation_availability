@@ -1,0 +1,58 @@
+# French translation of Translation availability
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "This content is not available in @language yet."
+msgstr "Ce contenu n'est pas encore disponible en @language."
+
+msgid "A more complete version of this content is available in another language."
+msgstr "Une version plus complète de ce contenu est disponible dans une autre langue."
+
+msgid "This content is not available in @language, but you can read it in @other:"
+msgstr "Ce contenu n'est pas disponible en @language, mais vous pouvez le lire en @other :"
+
+msgid "This content is not available in @language, but you can read it in these languages:"
+msgstr "Ce contenu n'est pas disponible en @language, mais vous pouvez le lire dans ces langues :"
+
+msgid "This content is not available in @language."
+msgstr "Ce contenu n'est pas disponible en @language."
+
+msgid "Add the @language translation"
+msgstr "Ajouter la traduction en @language"
+
+msgid "Available in another language"
+msgstr "Disponible dans une autre langue"
+
+msgid "Not available"
+msgstr "Non disponible"
+
+msgid "Not available in @language"
+msgstr "Non disponible en @language"
+
+msgid "Translation availability"
+msgstr "Disponibilité des traductions"
+
+msgid "Translation notice"
+msgstr "Avis sur la traduction"
+
+msgid "Missing"
+msgstr "Manquante"
+
+msgid "Unpublished"
+msgstr "Non publiée"
+
+msgid "(Almost) empty"
+msgstr "(Presque) vide"
+
+msgid "Short"
+msgstr "Courte"
+
+msgid "Partial"
+msgstr "Partielle"
+
+msgid "Full"
+msgstr "Complète"

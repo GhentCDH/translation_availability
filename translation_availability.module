@@ -1,0 +1,226 @@
+<?php
+
+/**
+ * @file
+ * Hooks of Translation availability.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
+use Drupal\node\NodeTypeInterface;
+use Drupal\translation_availability\AvailabilitySettings;
+
+/**
+ * Implements hook_entity_insert().
+ */
+function translation_availability_entity_insert(EntityInterface $entity): void {
+  _translation_availability_refresh($entity);
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function translation_availability_entity_update(EntityInterface $entity): void {
+  _translation_availability_refresh($entity);
+}
+
+/**
+ * Implements hook_entity_translation_delete().
+ */
+function translation_availability_entity_translation_delete(EntityInterface $translation): void {
+  _translation_availability_refresh($translation->getUntranslated());
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function translation_availability_entity_delete(EntityInterface $entity): void {
+  if ($entity instanceof NodeInterface) {
+    \Drupal::service('translation_availability.storage')->delete('node', (int) $entity->id());
+  }
+}
+
+/**
+ * Recounts a node, or the node of a changed paragraph.
+ */
+function _translation_availability_refresh(EntityInterface $entity): void {
+  if ($entity instanceof NodeInterface) {
+    \Drupal::service('translation_availability.analyzer')->refresh($entity);
+  }
+  // A paragraph saved on its own (not with its node): recount the node.
+  elseif ($entity instanceof ContentEntityInterface && $entity->getEntityTypeId() === 'paragraph' && method_exists($entity, 'getParentEntity')) {
+    $parent = $entity->getParentEntity();
+    while ($parent && $parent->getEntityTypeId() === 'paragraph' && method_exists($parent, 'getParentEntity')) {
+      $parent = $parent->getParentEntity();
+    }
+    if ($parent instanceof NodeInterface && !$parent->isNew()) {
+      \Drupal::service('translation_availability.analyzer')->refresh($parent);
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for node_type_form.
+ *
+ * Adds the settings of the content type in a "Translation availability" tab.
+ */
+function translation_availability_form_node_type_form_alter(array &$form, FormStateInterface $form_state): void {
+  if (!\Drupal::currentUser()->hasPermission('administer translation availability')) {
+    return;
+  }
+  /** @var \Drupal\node\NodeTypeInterface $type */
+  $type = $form_state->getFormObject()->getEntity();
+  $settings = $type->getThirdPartySettings('translation_availability') + AvailabilitySettings::BUNDLE_DEFAULTS;
+  $defaults = \Drupal::service('translation_availability.settings')->defaultThresholds();
+  $paths = $type->isNew() ? [] : \Drupal::service('translation_availability.counter')->candidatePaths('node', $type->id());
+
+  $form['translation_availability'] = [
+    '#type' => 'details',
+    '#title' => t('Translation availability'),
+    '#group' => 'additional_settings',
+    '#tree' => TRUE,
+  ];
+  $element = &$form['translation_availability'];
+  $element['enabled'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Track the availability of the translations'),
+    '#description' => t('Counts the words of each translation, for the report, the notices and the "not available" page.'),
+    '#default_value' => $settings['enabled'],
+  ];
+  $visible = ['visible' => [':input[name="translation_availability[enabled]"]' => ['checked' => TRUE]]];
+  $element['fields'] = [
+    '#type' => 'checkboxes',
+    '#title' => t('Fields that count as content'),
+    '#description' => $paths ? t('The words in these fields are counted. Fields of paragraphs count only in the language of the translation.') : t('Save the content type first.'),
+    // The same label can occur twice (two fields called "Text"): add the path.
+    '#options' => array_combine(array_keys($paths), array_map(fn($label, $path) => "$label ($path)", $paths, array_keys($paths))),
+    '#default_value' => array_intersect($settings['fields'], array_keys($paths)),
+    '#states' => $visible,
+  ];
+  $element['missing'] = [
+    '#type' => 'radios',
+    '#title' => t('When there is no translation in the language of the visitor'),
+    '#options' => [
+      'original' => t('Show the original (Drupal default); with a notice if enabled below'),
+      'unavailable_page' => t('Show the "not available in this language" page, with links to the available languages'),
+    ],
+    '#default_value' => $settings['missing'],
+    '#states' => $visible,
+  ];
+  $element['unpublished'] = [
+    '#type' => 'radios',
+    '#title' => t('When the translation exists but is not published'),
+    '#options' => [
+      'unavailable_page' => t('Show the "not available in this language" page'),
+      'access_denied' => t('Access denied (Drupal default)'),
+    ],
+    '#default_value' => $settings['unpublished'],
+    '#states' => $visible,
+  ];
+  $element['notice'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Show a notice when another language is substantially better'),
+    '#description' => t('In the "Translation notice" block; place it under Block layout.'),
+    '#default_value' => $settings['notice'],
+    '#states' => $visible,
+  ];
+  $element['override_thresholds'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Use other thresholds than the defaults'),
+    '#default_value' => $settings['override_thresholds'],
+    '#states' => $visible,
+  ];
+  $element['thresholds'] = [
+    '#type' => 'fieldset',
+    '#title' => t('Thresholds (words)'),
+    '#states' => ['visible' => [':input[name="translation_availability[override_thresholds]"]' => ['checked' => TRUE]]],
+  ];
+  foreach (_translation_availability_threshold_labels() as $key => $label) {
+    $element['thresholds'][$key] = [
+      '#type' => 'number',
+      '#title' => $label,
+      '#min' => 0,
+      '#default_value' => $settings['thresholds'][$key] ?? '',
+      '#placeholder' => $defaults[$key],
+    ];
+  }
+  $form['#entity_builders'][] = '_translation_availability_node_type_builder';
+}
+
+/**
+ * Entity builder for the node type form: saves the settings.
+ */
+function _translation_availability_node_type_builder(string $entity_type, NodeTypeInterface $type, array &$form, FormStateInterface $form_state): void {
+  $values = $form_state->getValue('translation_availability');
+  if ($values === NULL) {
+    return;
+  }
+  $thresholds = array_map('intval', array_filter($values['thresholds'] ?? [], 'is_numeric'));
+  $settings = [
+    'enabled' => (bool) $values['enabled'],
+    'fields' => array_values(array_filter($values['fields'] ?? [])),
+    'override_thresholds' => (bool) $values['override_thresholds'],
+    'thresholds' => $thresholds,
+    'missing' => $values['missing'],
+    'unpublished' => $values['unpublished'],
+    'notice' => (bool) $values['notice'],
+  ];
+  foreach ($settings as $key => $value) {
+    $type->setThirdPartySetting('translation_availability', $key, $value);
+  }
+}
+
+/**
+ * Returns the labels of the thresholds.
+ */
+function _translation_availability_threshold_labels(): array {
+  return [
+    'empty' => t('Fewer words than this: (almost) empty'),
+    'short' => t('Fewer words than this: short'),
+    'full' => t('At least this many words: full'),
+    'ratio' => t('Another language is better when it has this many times more words'),
+  ];
+}
+
+/**
+ * Implements hook_language_switch_links_alter().
+ *
+ * Marks the languages in which the current node is not (or not yet)
+ * available.
+ */
+function translation_availability_language_switch_links_alter(array &$links, string $type, Url $url): void {
+  if (!\Drupal::service('translation_availability.settings')->markLanguageSwitcher()) {
+    return;
+  }
+  $node = \Drupal::routeMatch()->getParameter('node');
+  if (!$node instanceof NodeInterface) {
+    return;
+  }
+  $availability = \Drupal::service('translation_availability.analyzer')->availability($node);
+  foreach ($links as $langcode => &$link) {
+    $state = $availability[$langcode]['state'] ?? NULL;
+    if (in_array($state, ['missing', 'unpublished'], TRUE)) {
+      $link['attributes']['class'][] = 'translation-availability--unavailable';
+      $link['attributes']['title'] = t('Not available in @language', ['@language' => \Drupal::service('translation_availability.analyzer')->languageName($langcode)]);
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function translation_availability_theme(): array {
+  return [
+    'translation_availability_unavailable' => [
+      'variables' => ['node' => NULL, 'language_name' => NULL, 'links' => [], 'translate_url' => NULL],
+    ],
+    'translation_availability_notice' => [
+      'variables' => ['state' => NULL, 'language_name' => NULL, 'current_words' => 0, 'alternatives' => []],
+    ],
+  ];
+}

@@ -1,0 +1,58 @@
+# Dutch translation of Translation availability
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "This content is not available in @language yet."
+msgstr "Deze inhoud is nog niet beschikbaar in het @language."
+
+msgid "A more complete version of this content is available in another language."
+msgstr "Een vollediger versie van deze inhoud is beschikbaar in een andere taal."
+
+msgid "This content is not available in @language, but you can read it in @other:"
+msgstr "Deze inhoud is niet beschikbaar in het @language, maar je kan ze lezen in het @other:"
+
+msgid "This content is not available in @language, but you can read it in these languages:"
+msgstr "Deze inhoud is niet beschikbaar in het @language, maar je kan ze in deze talen lezen:"
+
+msgid "This content is not available in @language."
+msgstr "Deze inhoud is niet beschikbaar in het @language."
+
+msgid "Add the @language translation"
+msgstr "Voeg de vertaling in het @language toe"
+
+msgid "Available in another language"
+msgstr "Beschikbaar in een andere taal"
+
+msgid "Not available"
+msgstr "Niet beschikbaar"
+
+msgid "Not available in @language"
+msgstr "Niet beschikbaar in het @language"
+
+msgid "Translation availability"
+msgstr "Beschikbaarheid van vertalingen"
+
+msgid "Translation notice"
+msgstr "Melding over de vertaling"
+
+msgid "Missing"
+msgstr "Ontbreekt"
+
+msgid "Unpublished"
+msgstr "Niet gepubliceerd"
+
+msgid "(Almost) empty"
+msgstr "(Bijna) leeg"
+
+msgid "Short"
+msgstr "Kort"
+
+msgid "Partial"
+msgstr "Gedeeltelijk"
+
+msgid "Full"
+msgstr "Volledig"

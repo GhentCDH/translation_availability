@@ -1,0 +1,13 @@
+name: 'Translation availability'
+type: module
+description: 'Shows which translations of content are available, missing, unpublished or much shorter than another language, and helps visitors to the languages that are.'
+package: Multilingual
+core_version_requirement: ^10.3 || ^11
+configure: translation_availability.settings
+dependencies:
+  - drupal:language
+  - drupal:content_translation
+  - drupal:node
+# Dutch and French translations, when installed with composer (modules/contrib).
+'interface translation project': translation_availability
+'interface translation server pattern': modules/contrib/translation_availability/translations/%language.po

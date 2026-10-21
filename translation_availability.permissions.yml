@@ -1,0 +1,6 @@
+administer translation availability:
+  title: 'Administer translation availability'
+  description: 'Change the global settings and the settings per content type.'
+  restrict access: true
+view translation availability report:
+  title: 'View the translation availability report'
