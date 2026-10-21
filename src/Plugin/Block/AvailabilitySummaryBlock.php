@@ -109,11 +109,21 @@ final class AvailabilitySummaryBlock extends BlockBase implements ContainerFacto
         $rows[] = $row;
       }
     }
+    $report = Url::fromRoute($this->configuration['report'] ?: 'view.translation_availability.page', [], count($bundles) === 1 ? ['query' => ['type' => reset($bundles)]] : []);
     return [
-      '#type' => 'table',
-      '#header' => [$this->t('Language'), $labels['missing'], $labels['empty']],
-      '#rows' => $rows,
-      '#empty' => $this->t('Nothing to translate.'),
+      'table' => [
+        '#type' => 'table',
+        '#header' => [$this->t('Language'), $labels['missing'], $labels['empty']],
+        '#rows' => $rows,
+        '#empty' => $this->t('Nothing to translate.'),
+      ],
+      'report' => [
+        '#type' => 'link',
+        '#title' => $this->t('Full report'),
+        '#url' => $report,
+        '#prefix' => '<div class="more-link">',
+        '#suffix' => '</div>',
+      ],
       '#cache' => ['tags' => [AvailabilityStorage::CACHE_TAG, 'config:language_list']],
     ];
   }
