@@ -29,6 +29,8 @@ can be used on any multilingual Drupal site.
     better (place it under *Block layout*);
   - the language switcher marks the languages a page is not available in
     (class `translation-availability--unavailable`, and a title).
+- **Translations to do**, a block for a dashboard: per language, how many
+  translations are missing or (almost) empty, linked to those in the report.
 - **Twig**: `translation_state(node)`, `translation_suggestions(node)`,
   `translation_availability(node)`, `reading_time(node)`.
 - **Submodule `sapi_language_fallback`**: a language filter with fallback for

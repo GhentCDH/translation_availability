@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\translation_availability;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Connection;
 
 /**
@@ -11,7 +12,38 @@ use Drupal\Core\Database\Connection;
  */
 final class AvailabilityStorage {
 
+  /**
+   * Invalidated whenever rows change (e.g. for the summary block).
+   */
+  public const CACHE_TAG = 'translation_availability_list';
+
   public function __construct(private readonly Connection $database) {}
+
+  /**
+   * Returns the number of translations per language and state.
+   *
+   * @param string[] $bundles
+   *   Only these bundles; all when empty.
+   *
+   * @return array<string, array<string, int>>
+   *   Keyed by langcode, then state.
+   */
+  public function counts(string $entity_type_id, array $bundles = []): array {
+    $query = $this->database->select('translation_availability', 't')
+      ->fields('t', ['langcode', 'state'])
+      ->condition('entity_type', $entity_type_id)
+      ->groupBy('langcode')
+      ->groupBy('state');
+    $query->addExpression('COUNT(*)', 'total');
+    if ($bundles) {
+      $query->condition('bundle', $bundles, 'IN');
+    }
+    $counts = [];
+    foreach ($query->execute() as $row) {
+      $counts[$row->langcode][$row->state] = (int) $row->total;
+    }
+    return $counts;
+  }
 
   /**
    * Replaces the rows of an entity.
@@ -32,6 +64,7 @@ final class AvailabilityStorage {
     }
     $insert->execute();
     unset($transaction);
+    Cache::invalidateTags([self::CACHE_TAG]);
   }
 
   /**
@@ -53,6 +86,7 @@ final class AvailabilityStorage {
       ->condition('entity_type', $entity_type_id)
       ->condition('entity_id', $id)
       ->execute();
+    Cache::invalidateTags([self::CACHE_TAG]);
   }
 
   /**
@@ -67,6 +101,7 @@ final class AvailabilityStorage {
       $delete->condition('bundle', $bundles, 'NOT IN');
     }
     $delete->execute();
+    Cache::invalidateTags([self::CACHE_TAG]);
   }
 
 }
