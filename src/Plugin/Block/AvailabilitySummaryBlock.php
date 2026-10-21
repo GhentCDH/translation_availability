@@ -57,7 +57,7 @@ final class AvailabilitySummaryBlock extends BlockBase implements ContainerFacto
   }
 
   public function defaultConfiguration(): array {
-    return ['bundles' => []];
+    return ['bundles' => [], 'report' => 'view.translation_availability.page'];
   }
 
   public function blockForm($form, FormStateInterface $form_state): array {
@@ -68,11 +68,19 @@ final class AvailabilitySummaryBlock extends BlockBase implements ContainerFacto
       '#options' => ViewsOptions::trackedBundles(),
       '#default_value' => $this->configuration['bundles'],
     ];
+    $form['report'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Report'),
+      '#description' => $this->t('The route of the report the numbers link to, e.g. a display of the Translation availability view that shows only these content types.'),
+      '#default_value' => $this->configuration['report'],
+      '#required' => TRUE,
+    ];
     return $form;
   }
 
   public function blockSubmit($form, FormStateInterface $form_state): void {
     $this->configuration['bundles'] = array_values(array_filter($form_state->getValue('bundles')));
+    $this->configuration['report'] = $form_state->getValue('report');
   }
 
   protected function blockAccess(AccountInterface $account): AccessResult {
@@ -93,7 +101,7 @@ final class AvailabilitySummaryBlock extends BlockBase implements ContainerFacto
         $todo += $total;
         $query = ['langcode' => $langcode, 'state' => $state] + (count($bundles) === 1 ? ['type' => reset($bundles)] : []);
         $row[] = $total
-          ? ['data' => ['#type' => 'link', '#title' => (string) $total, '#url' => Url::fromRoute('view.translation_availability.page', [], ['query' => $query])]]
+          ? ['data' => ['#type' => 'link', '#title' => (string) $total, '#url' => Url::fromRoute($this->configuration['report'] ?: 'view.translation_availability.page', [], ['query' => $query])]]
           : '0';
       }
       // The original language is rarely missing: leave it out when all is done.

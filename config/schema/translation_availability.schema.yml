@@ -57,3 +57,17 @@ translation_availability.bundle_settings:
     notice:
       type: boolean
       label: 'Show a notice when another language is substantially better'
+
+block.settings.translation_availability_summary:
+  type: block_settings
+  label: 'Translations to do block'
+  mapping:
+    bundles:
+      type: sequence
+      label: 'Content types (all tracked ones when empty)'
+      sequence:
+        type: string
+        label: 'Content type'
+    report:
+      type: string
+      label: 'Route of the report the numbers link to'
