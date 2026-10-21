@@ -42,21 +42,22 @@ function translation_availability_views_data(): array {
     'title' => t('Language'),
     'help' => t('The language of the translation.'),
     'field' => ['id' => 'language'],
-    'filter' => ['id' => 'language'],
+    // Only the languages of the site.
+    'filter' => ['id' => 'in_operator', 'options callback' => '\Drupal\translation_availability\ViewsOptions::languages'],
     'argument' => ['id' => 'language'],
     'sort' => ['id' => 'standard'],
   ];
   $data['translation_availability']['bundle'] = [
     'title' => t('Content type'),
-    'field' => ['id' => 'standard'],
-    'filter' => ['id' => 'in_operator', 'options callback' => '_translation_availability_bundle_options'],
+    'field' => ['id' => 'machine_name', 'options callback' => '\Drupal\translation_availability\ViewsOptions::bundles'],
+    'filter' => ['id' => 'in_operator', 'options callback' => '\Drupal\translation_availability\ViewsOptions::trackedBundles'],
     'sort' => ['id' => 'standard'],
   ];
   $data['translation_availability']['state'] = [
     'title' => t('State'),
     'help' => t('missing, unpublished, empty, short, partial or full.'),
-    'field' => ['id' => 'standard'],
-    'filter' => ['id' => 'in_operator', 'options callback' => '_translation_availability_state_options'],
+    'field' => ['id' => 'machine_name', 'options callback' => '\Drupal\translation_availability\ViewsOptions::states'],
+    'filter' => ['id' => 'in_operator', 'options callback' => '\Drupal\translation_availability\ViewsOptions::states'],
     'sort' => ['id' => 'standard'],
   ];
   $data['translation_availability']['words'] = [
@@ -66,36 +67,16 @@ function translation_availability_views_data(): array {
     'filter' => ['id' => 'numeric'],
     'sort' => ['id' => 'standard'],
   ];
+  $data['translation_availability']['operation'] = [
+    'title' => t('Edit or add the translation'),
+    'help' => t('Edit the translation, or add it when it is missing.'),
+    'real field' => 'entity_id',
+    'field' => ['id' => 'translation_availability_operation', 'additional fields' => ['langcode']],
+  ];
   $data['translation_availability']['updated'] = [
     'title' => t('Counted'),
     'field' => ['id' => 'date'],
     'sort' => ['id' => 'date'],
   ];
   return $data;
-}
-
-/**
- * Returns the states, for the state filter.
- */
-function _translation_availability_state_options(): array {
-  return [
-    'missing' => t('Missing'),
-    'unpublished' => t('Unpublished'),
-    'empty' => t('(Almost) empty'),
-    'short' => t('Short'),
-    'partial' => t('Partial'),
-    'full' => t('Full'),
-  ];
-}
-
-/**
- * Returns the tracked content types, for the content type filter.
- */
-function _translation_availability_bundle_options(): array {
-  $options = [];
-  $types = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple(\Drupal::service('translation_availability.settings')->enabledBundles());
-  foreach ($types as $id => $type) {
-    $options[$id] = $type->label();
-  }
-  return $options;
 }
